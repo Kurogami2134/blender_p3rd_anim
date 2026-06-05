@@ -25,13 +25,13 @@ def insert_keyframe(obj, transform: int, frame: int, value: int) -> None:
             obj.rotation_euler[2] = value * ROTATION_SCALE
             obj.keyframe_insert(data_path="rotation_euler", index=2, frame=frame)
         case 0x0040: #  "X Trans"
-            obj.location[0] = value / 0x10
+            obj.location[0] = value / 0x100
             obj.keyframe_insert(data_path="location", index=0, frame=frame)
         case 0x0080: #  "Y Trans"
-            obj.location[1] = value / 0x10
+            obj.location[1] = value / 0x100
             obj.keyframe_insert(data_path="location", index=1, frame=frame)
         case 0x0100: #  "Z Trans"
-            obj.location[2] = value / 0x10
+            obj.location[2] = value / 0x100
             obj.keyframe_insert(data_path="location", index=2, frame=frame)
         case 0x0200: #  "X Scale"
             obj.scale[0] = value / 0x100
@@ -61,7 +61,8 @@ def import_anim(file, armature, bone_offset: int = 2) -> None:
         armature.pose.bones[bone + bone_offset].rotation_mode = 'XYZ'
         do_bone_anim(file, armature.pose.bones[bone + bone_offset])
     
-    # Set Max Frame
+    # Set start/end Frame
+    bpy.data.scenes["Scene"].frame_start = 0
     bpy.data.scenes["Scene"].frame_end = int(max(curve.keyframe_points[-1].co[0] for curve in armature.animation_data.action.fcurves))
 
 

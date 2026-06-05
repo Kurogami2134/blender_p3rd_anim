@@ -1,0 +1,54 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: 
+//   Authors: Kurogami2134
+//   Version: 
+//   Purpose: P3rd Monster Anim File
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+enum <ushort> TransformType {
+    X_Rotation = 0x0008,
+    Y_Rotation = 0x0010,
+    Z_Rotation = 0x0020,
+    X_Translation = 0x0040,
+    Y_Translation = 0x0080,
+    Z_Translation = 0x0100,
+    X_Scale = 0x0200,
+    Y_Scale = 0x0400,
+    Z_Scale = 0x0800
+};
+
+struct KeyFrame {
+    short value;
+    ushort frame;
+    ushort easing;
+    ushort interpolation;
+};
+
+struct Transform {
+    TransformType type;
+    ushort keyframe_count;
+    uint size;
+    KeyFrame keyframes[keyframe_count];
+};
+
+
+struct BoneAnimation {
+    ushort transform_count;
+    ushort size;
+    Transform transforms[transform_count] <optimize=false>;
+};
+
+
+struct {
+    uint bone_count;
+    uint size;
+    uint loop;
+    uint unk;
+    BoneAnimation bones[bone_count] <optimize=false>;
+} Animation;
