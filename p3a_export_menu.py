@@ -31,12 +31,18 @@ class ExportP3A(Operator, ExportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
+    missing_bones: StringProperty(
+        default="",
+        maxlen=255,  # Max internal buffer length, longer would be clamped.
+    )
+
     def execute(self, context):
         return export_p3a.execute(
             context,
             filepath=self.filepath,
             offset=self.offset,
             loop=self.loop,
+            missing=self.missing_bones,
         )
 
 

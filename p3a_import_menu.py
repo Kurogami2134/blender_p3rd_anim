@@ -25,11 +25,17 @@ class ImportP3A(Operator, ImportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
+    missing_bones: StringProperty(
+        default="",
+        maxlen=255,  # Max internal buffer length, longer would be clamped.
+    )
+
     def execute(self, context):
         return import_p3a.execute(
             context,
             filepath=self.filepath,
             offset=self.offset,
+            missing=self.missing_bones,
         )
 
 

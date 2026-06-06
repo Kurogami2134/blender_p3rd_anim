@@ -52,28 +52,38 @@ def do_bone_anim(file, bone) -> None:
             value, frame_idx, _, _ = unpack("4h", file.read(0x8))
             insert_keyframe(bone, transform_type, frame_idx, value)
 
-def import_anim(file, armature, bone_offset: int = 2) -> None:
+def import_anim(file, armature, missing_bones = None, bone_offset: int = 2) -> None:
+    if missing_bones is None:
+        missing_bones =  []
+    skipped_bones = 0
+
     bone_count: int = unpack("i", file.read(4))[0]
 
     # Add bone keyframes
     file.seek(0x10)
     for bone in range(bone_count):
-        armature.pose.bones[bone + bone_offset].rotation_mode = 'XYZ'
-        do_bone_anim(file, armature.pose.bones[bone + bone_offset])
+        while bone + skipped_bones in missing_bones:
+            skipped_bones += 1
+        armature.pose.bones[bone + bone_offset + skipped_bones].rotation_mode = 'XYZ'
+        do_bone_anim(file, armature.pose.bones[bone + bone_offset + skipped_bones])
     
     # Set start/end Frame
     bpy.data.scenes["Scene"].frame_start = 0
     bpy.data.scenes["Scene"].frame_end = int(max(curve.keyframe_points[-1].co[0] for curve in armature.animation_data.action.fcurves))
 
 
-def execute(c, filepath: str, offset: int) -> set[str]:
+def execute(c, filepath: str, offset: int, missing: str) -> set[str]:
     obj = c.active_object
     if obj.type != 'ARMATURE':
         warning(["Active object is not an armature."])
         return {'CANCELLED'}
+    if missing == '':
+        missing_bones: list | None = None
+    else:
+        missing_bones: list | None = [int(x) for x in missing.split(",")]
     try:
         with open(filepath, "rb") as file:
-            import_anim(file, obj, offset)
+            import_anim(file, obj, bone_offset=offset, missing_bones=missing_bones)
     except:
         warning(["Import Error"])
         return {'CANCELLED'}

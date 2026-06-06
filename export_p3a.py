@@ -28,7 +28,7 @@ def warning(messages: list[str] = [""], title: str = "Warning"):
 
 
 
-def export_anim(file, armature, bone_offset: int = 2, loop: bool = True):
+def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop: bool = True):
     def get_bone_idx(info_path: str) -> int:
         return armature.pose.bones.find(info_path.split("[\"")[1].split("\"]")[0])
     
@@ -43,6 +43,9 @@ def export_anim(file, armature, bone_offset: int = 2, loop: bool = True):
             case _:
                 return 0
 
+    if missing_bones is None:
+        missing_bones =  []
+    missing_bones = [x for x in missing_bones]
     
     bones = {}
     for curve in armature.animation_data.action.fcurves:
@@ -56,6 +59,8 @@ def export_anim(file, armature, bone_offset: int = 2, loop: bool = True):
 
     file.seek(0x10)
     for idx in range(max(bones.keys()) + 1):
+        if idx in missing_bones:
+            continue
         print(f'Bone{idx}')
         if idx in bones:
             add = file.tell()
@@ -73,17 +78,21 @@ def export_anim(file, armature, bone_offset: int = 2, loop: bool = True):
 
     size = file.tell()
     file.seek(0)
-    file.write(pack("3i4x", len(bones), size, 1 if loop else 0))
+    file.write(pack("3i4x", max(bones.keys()) + 1 - len(missing_bones), size, 1 if loop else 0))
 
 
-def execute(c, filepath: str, offset: int, loop: bool) -> set[str]:
+def execute(c, filepath: str, offset: int, loop: bool, missing: str) -> set[str]:
     obj = c.active_object
     if obj.type != 'ARMATURE':
         warning(["Active object is not an armature."])
         return {'CANCELLED'}
+    if missing == '':
+        missing_bones: list | None = None
+    else:
+        missing_bones: list | None = [int(x) for x in missing.split(",")]
     try:
         with open(filepath, "wb") as file:
-            export_anim(file=file, armature=obj, bone_offset=offset, loop=loop)
+            export_anim(file=file, armature=obj, bone_offset=offset, loop=loop, missing_bones=missing_bones)
     except:
         warning(["Export Error"])
         return {'CANCELLED'}
