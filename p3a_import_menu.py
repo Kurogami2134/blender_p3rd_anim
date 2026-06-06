@@ -26,6 +26,7 @@ class ImportP3A(Operator, ImportHelper):
     )
 
     missing_bones: StringProperty(
+        name="Bones to skip",
         default="",
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )

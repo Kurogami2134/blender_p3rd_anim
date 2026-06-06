@@ -66,7 +66,7 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
             add = file.tell()
             file.seek(4, 1)
             for transform in bones[idx]:
-                file.write(pack("2hi", TransformRemap[transform["transform"]], len(transform["keyframes"]), len(transform["keyframes"]) * 8 + 4))
+                file.write(pack("2hi", TransformRemap[transform["transform"]], len(transform["keyframes"]), len(transform["keyframes"]) * 8 + 8))
                 for kf in transform["keyframes"]:
                     file.write(pack("2h4x", kf[1], kf[0]))
             add2 = file.tell()

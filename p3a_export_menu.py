@@ -32,6 +32,7 @@ class ExportP3A(Operator, ExportHelper):
     )
 
     missing_bones: StringProperty(
+        name="Bones to skip",
         default="",
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
