@@ -25,9 +25,13 @@ def execute(c, filepath: str, bone_offset: int, missing: str) -> set[str]:
                     print(f'Importing Anim_{offset_idx:0>3}.')
                     file.seek(offset)
                     obj.animation_data.action = bpy.data.actions.new(f'Anim_{offset_idx:0>3}')
-                    import_anim(file, obj, bone_offset=bone_offset, missing_bones=missing_bones)
+                    import_anim(
+                        file, 
+                        obj, 
+                        bone_offset=bone_offset, 
+                        missing_bones=missing_bones
+                    )
     except:
-        raise
         warning(["Import Error"])
         return {'CANCELLED'}
     return {'FINISHED'}

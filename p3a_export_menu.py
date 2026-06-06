@@ -37,6 +37,12 @@ class ExportP3A(Operator, ExportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
+    bone_count: IntProperty(
+        name="Bone Count",
+        description="Force bone count, skipping or adding empty bones if needed. (If unsure leave it at -1.)",
+        default=-1,
+    )
+
     def execute(self, context):
         return export_p3a.execute(
             context,
@@ -44,6 +50,7 @@ class ExportP3A(Operator, ExportHelper):
             offset=self.offset,
             loop=self.loop,
             missing=self.missing_bones,
+            bone_count=self.bone_count,
         )
 
 

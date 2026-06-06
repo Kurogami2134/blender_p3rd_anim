@@ -83,7 +83,12 @@ def execute(c, filepath: str, offset: int, missing: str) -> set[str]:
         missing_bones: list | None = [int(x) for x in missing.split(",")]
     try:
         with open(filepath, "rb") as file:
-            import_anim(file, obj, bone_offset=offset, missing_bones=missing_bones)
+            import_anim(
+                file, 
+                obj, 
+                bone_offset=offset, 
+                missing_bones=missing_bones
+            )
     except:
         warning(["Import Error"])
         return {'CANCELLED'}
