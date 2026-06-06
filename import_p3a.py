@@ -60,7 +60,7 @@ def import_anim(file, armature, missing_bones = None, bone_offset: int = 2) -> N
     bone_count: int = unpack("i", file.read(4))[0]
 
     # Add bone keyframes
-    file.seek(0x10)
+    file.seek(0xC, 1)
     for bone in range(bone_count):
         while bone + skipped_bones in missing_bones:
             skipped_bones += 1
