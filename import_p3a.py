@@ -25,13 +25,13 @@ def insert_keyframe(obj, transform: int, frame: int, value: int) -> None:
             obj.rotation_euler[2] = value * ROTATION_SCALE
             obj.keyframe_insert(data_path="rotation_euler", index=2, frame=frame)
         case 0x0040: #  "X Trans"
-            obj.location[0] = value / 0x100
+            obj.location[0] = value / 0x10
             obj.keyframe_insert(data_path="location", index=0, frame=frame)
         case 0x0080: #  "Y Trans"
-            obj.location[1] = value / 0x100
+            obj.location[1] = value / 0x10
             obj.keyframe_insert(data_path="location", index=1, frame=frame)
         case 0x0100: #  "Z Trans"
-            obj.location[2] = value / 0x100
+            obj.location[2] = value / 0x10
             obj.keyframe_insert(data_path="location", index=2, frame=frame)
         case 0x0200: #  "X Scale"
             obj.scale[0] = value / 0x100

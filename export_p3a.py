@@ -35,7 +35,7 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
     def get_value(value: int, transform_type: str) -> int:
         match transform_type:
             case "location":
-                return int(value * 0x100)
+                return int(value * 0x10)
             case "scale":
                 return int(value * 0x100)
             case "rotation_euler":
