@@ -28,7 +28,7 @@ def warning(messages: list[str] = [""], title: str = "Warning"):
 
 
 
-def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop: bool = True, bone_count: int | None = None):
+def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop: bool = True, bone_count: int | None = None, loop_start: int = 0):
     def get_bone_idx(info_path: str) -> int:
         return armature.pose.bones.find(info_path.split("[\"")[1].split("\"]")[0])
     
@@ -78,10 +78,10 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
 
     size = file.tell()
     file.seek(0)
-    file.write(pack("3i4x", (max(bones.keys()) + 1 - len(missing_bones)) if bone_count is None else bone_count, size, 1 if loop else 0))
+    file.write(pack("3if", (max(bones.keys()) + 1 - len(missing_bones)) if bone_count is None else bone_count, size, 1 if loop else 0, loop_start if loop else 0))
 
 
-def execute(c, filepath: str, offset: int, loop: bool, missing: str, bone_count: int) -> set[str]:
+def execute(c, filepath: str, offset: int, loop: bool, missing: str, bone_count: int, loop_start: int) -> set[str]:
     obj = c.active_object
     if obj.type != 'ARMATURE':
         warning(["Active object is not an armature."])
@@ -97,6 +97,7 @@ def execute(c, filepath: str, offset: int, loop: bool, missing: str, bone_count:
                 armature=obj, 
                 bone_offset=offset, 
                 loop=loop, 
+                loop_start=loop_start,
                 missing_bones=missing_bones, 
                 bone_count=None if bone_count == -1 else bone_count
             )

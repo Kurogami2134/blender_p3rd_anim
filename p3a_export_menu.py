@@ -24,6 +24,12 @@ class ExportP3A(Operator, ExportHelper):
         description="Set 1 for infinite loop.",
         default=True,
     )
+
+    loop_start: IntProperty(
+        name="Loop Start",
+        description="Set loop start frame. (If unsure leave it at 0.)",
+        default=0,
+    )
     
     filter_glob: StringProperty(
         default="*.p3a",
@@ -49,6 +55,7 @@ class ExportP3A(Operator, ExportHelper):
             filepath=self.filepath,
             offset=self.offset,
             loop=self.loop,
+            loop_start=self.loop_start,
             missing=self.missing_bones,
             bone_count=self.bone_count,
         )

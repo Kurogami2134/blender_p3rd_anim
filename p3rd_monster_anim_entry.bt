@@ -49,6 +49,6 @@ struct {
     uint bone_count;
     uint size;
     uint loop;
-    uint unk;
+    float loop_start;
     BoneAnimation bones[bone_count] <optimize=false>;
 } Animation;
