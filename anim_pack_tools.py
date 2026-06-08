@@ -12,12 +12,15 @@ def extract_anim(path: str) -> None:
     if not exists(work_dir):
         mkdir(work_dir)
     with open(path, "rb") as file, open(joinpath(work_dir, "Info.txt"), "w", encoding="utf-8") as info:
-        Header = unpack("8i", file.read(0x20))
+        file.seek(4)
+        header_size = unpack("i", file.read(4))[0]
+        file.seek(0)
+        Header = unpack(f"{header_size//4}i", file.read(header_size))
         info.write(f'Header: {", ".join([str(x) for x in Header])}\n')
 
-        count = int(Header[-1] / 4) - 9
+        count = (Header[-1] - header_size - 4) // 4
         for offset_idx in range(count):
-            file.seek(0x24 + offset_idx * 4)
+            file.seek(header_size + 4 + offset_idx * 4)
             offset = unpack("i", file.read(4))[0]
             if offset != -1:
                 file.seek(offset + 4)
@@ -33,12 +36,12 @@ def rebuild_anim(path: str) -> None:
         return
     with open(path + ".anim", "wb") as out, open(joinpath(path, "Info.txt"), "r", encoding="utf-8") as info:
         Header = list(map(int, info.readline().split(": ")[1].split(", ")))
-        out.write(pack("9i", *Header, -1))
+        out.write(pack(f"{len(Header)}i", *Header, -1))
         
-        count = int(Header[-1] / 4) - 9
+        count = (Header[-1] - Header[1] - 4) // 4
         offset = Header[-1]
         for idx in range(count):
-            out.seek(idx * 4 + 0x24)
+            out.seek(idx * 4 + 4 + Header[1])
             if exists(joinpath(path, f'Anim_{idx:0>3}.p3a')):
                 out.write(pack("i", offset))
                 out.seek(offset)

@@ -58,14 +58,16 @@ struct {
     uint size;
     byte unk[size-12];
     uint first_anim;
-    uint null;
 } Header;
 
-uint offset[(Header.first_anim / 4) - 9];
+uint null_offset;
+
+local int anim_count = (Header.first_anim - Header.size - 4) / 4;
+uint offset[anim_count];
 
 local int i;
 local int count = 0;
-for (i = 0; i < (Header.first_anim / 4) - 9; i++) {
+for (i = 0; i < anim_count; i++) {
     if (offset[i] != 0xFFFFFFFF)
         count++;
 }

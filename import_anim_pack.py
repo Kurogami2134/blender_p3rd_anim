@@ -16,10 +16,13 @@ def execute(c, filepath: str, bone_offset: int, missing: str) -> set[str]:
         if obj.animation_data is None:
             obj.animation_data_create()
         with open(filepath, "rb") as file:
-            Header = unpack("8i", file.read(0x20))
-            count = int(Header[-1] / 4) - 9
+            file.seek(4)
+            header_size = unpack("i", file.read(4))[0]
+            file.seek(0)
+            Header = unpack(f"{header_size//4}i", file.read(header_size))
+            count = (Header[-1] - header_size - 4) // 4
             for offset_idx in range(count):
-                file.seek(0x24 + offset_idx * 4)
+                file.seek(header_size + 4 + offset_idx * 4)
                 offset = unpack("i", file.read(4))[0]
                 if offset != -1:
                     print(f'Importing Anim_{offset_idx:0>3}.')
