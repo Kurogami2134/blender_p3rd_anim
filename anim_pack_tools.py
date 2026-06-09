@@ -36,7 +36,7 @@ def rebuild_anim(path: str) -> None:
         return
     with open(path + ".anim", "wb") as out, open(joinpath(path, "Info.txt"), "r", encoding="utf-8") as info:
         Header = list(map(int, info.readline().split(": ")[1].split(", ")))
-        out.write(pack(f"{len(Header)}i", *Header, -1))
+        out.write(pack(f"{len(Header)+1}i", *Header, -1))
         
         count = (Header[-1] - Header[1] - 4) // 4
         offset = Header[-1]
