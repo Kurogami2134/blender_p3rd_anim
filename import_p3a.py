@@ -4,7 +4,17 @@ from struct import unpack
 
 
 ROTATION_SCALE = radians(1 / 0x1000 * 90)
-
+TransformRemap: dict[int, float] = {
+    0x0040: 1 / 0x10,
+    0x0080: 1 / 0x10,
+    0x0100: 1 / 0x10,
+    0x0008: ROTATION_SCALE,
+    0x0010: ROTATION_SCALE,
+    0x0020: ROTATION_SCALE,
+    0x0200: 1 / 0x100,
+    0x0400: 1 / 0x100,
+    0x0800: 1 / 0x100,
+}
 
 def warning(messages: list[str] = [""], title: str = "Warning"):
     def draw(self, context):
@@ -44,13 +54,35 @@ def insert_keyframe(obj, transform: int, frame: int, value: int) -> None:
             obj.keyframe_insert(data_path="scale", index=2, frame=frame)
 
 
-def do_bone_anim(file, bone) -> None:
-    count, size = unpack("2h", file.read(4))
-    for _ in range(count):
-        transform_type, keyframes, size = unpack("2HI", file.read(0x8))
-        for _ in range(keyframes):
-            value, frame_idx, _, _ = unpack("4h", file.read(0x8))
-            insert_keyframe(bone, transform_type, frame_idx, value)
+def do_bone_anim(file, bone, parent) -> None:
+    transform_count, anim_size = unpack("2h", file.read(4))
+    for _ in range(transform_count):
+        transform_type, keyframe_count, transform_size = unpack("2HI", file.read(0x8))
+        keyframes = [unpack("4h", file.read(0x8)) for _ in range(keyframe_count)]
+        [insert_keyframe(bone, transform_type, frame_idx, value) for value, frame_idx, _, _ in keyframes]
+        
+        kps = parent.animation_data.action.fcurves[-1].keyframe_points
+        for kf in range(len(keyframes)):
+            print("pizza")
+            kps[kf].interpolation = 'BEZIER'
+            kps[kf].handle_left_type = 'FREE'
+            kps[kf].handle_right_type = 'FREE'
+            if kf == 0:
+                prev_dt: float = 1
+                next_dt: float = (keyframes[kf+1][1] - keyframes[kf][1]) / 3.0
+                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0]) * TransformRemap[transform_type])
+                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0] + keyframes[kf][3] * next_dt) * TransformRemap[transform_type])
+            elif kf == len(keyframes) - 1:
+                prev_dt: float = (keyframes[kf][1] - keyframes[kf - 1][1]) / 3.0
+                next_dt: float = 1
+                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0] - keyframes[kf][2] * prev_dt) * TransformRemap[transform_type])
+                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0]) * TransformRemap[transform_type])
+            else:
+                prev_dt: float = (keyframes[kf][1] - keyframes[kf - 1][1]) / 3.0
+                next_dt: float = (keyframes[kf+1][1] - keyframes[kf][1]) / 3.0
+                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0] - keyframes[kf][2] * prev_dt) * TransformRemap[transform_type])
+                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0] + keyframes[kf][3] * next_dt) * TransformRemap[transform_type])
+                
 
 def import_anim(file, armature, missing_bones = None, bone_offset: int = 2) -> None:
     if missing_bones is None:
@@ -65,7 +97,7 @@ def import_anim(file, armature, missing_bones = None, bone_offset: int = 2) -> N
         while bone + skipped_bones in missing_bones:
             skipped_bones += 1
         armature.pose.bones[bone + bone_offset + skipped_bones].rotation_mode = 'XYZ'
-        do_bone_anim(file, armature.pose.bones[bone + bone_offset + skipped_bones])
+        do_bone_anim(file, armature.pose.bones[bone + bone_offset + skipped_bones], parent=armature)
     
     # Set start/end Frame
     bpy.data.scenes["Scene"].frame_start = 0

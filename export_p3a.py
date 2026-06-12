@@ -120,7 +120,6 @@ def execute(c, filepath: str, offset: int, loop: bool, missing: str, bone_count:
                 bone_count=None if bone_count == -1 else bone_count
             )
     except:
-        raise
         warning(["Export Error"])
         return {'CANCELLED'}
     return {'FINISHED'}
