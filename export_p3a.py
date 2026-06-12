@@ -53,7 +53,16 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
             bones[bone_idx] = []
         bones[bone_idx].append({
             "transform": f'{curve.data_path.split(".")[-1]}_{["x", "y", "z"][curve.array_index]}',
-            "keyframes": [(int(x.co[0]), get_value(x.co[1], curve.data_path.split(".")[-1])) for x in curve.keyframe_points],
+            "keyframes": [(
+                int(x.co[0]), 
+                get_value(x.co[1], curve.data_path.split(".")[-1]),
+                
+                get_value(x.handle_right[1], curve.data_path.split(".")[-1]),
+                x.handle_right[0] - x.co[0],
+                
+                get_value(x.handle_left[1], curve.data_path.split(".")[-1]),
+                x.co[0] - x.handle_left[0],
+                ) for x in curve.keyframe_points],
         })
 
     file.seek(0x10)
@@ -68,7 +77,16 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
             for transform in bones[idx]:
                 file.write(pack("2hi", TransformRemap[transform["transform"]], len(transform["keyframes"]), len(transform["keyframes"]) * 8 + 8))
                 for kf in transform["keyframes"]:
-                    file.write(pack("2h4x", kf[1], kf[0]))
+                    if kf == transform["keyframes"][0]:
+                        ease_in = 0
+                        ease_out = (kf[2] - kf[1]) / kf[3]
+                    elif kf == transform["keyframes"][-1]:
+                        ease_in = (kf[1] - kf[4]) / kf[5]
+                        ease_out = 0
+                    else:
+                        ease_in = (kf[1] - kf[4]) / kf[5]
+                        ease_out = (kf[2] - kf[1]) / kf[3]
+                    file.write(pack("4h", kf[1], kf[0], int(ease_in), int(ease_out)))
             add2 = file.tell()
             file.seek(add)
             file.write(pack("2h", len(bones[idx]), add2-add))
@@ -102,6 +120,7 @@ def execute(c, filepath: str, offset: int, loop: bool, missing: str, bone_count:
                 bone_count=None if bone_count == -1 else bone_count
             )
     except:
+        raise
         warning(["Export Error"])
         return {'CANCELLED'}
     return {'FINISHED'}
