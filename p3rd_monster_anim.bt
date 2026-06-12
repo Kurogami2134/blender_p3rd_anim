@@ -26,8 +26,8 @@ enum <ushort> TransformType {
 struct KeyFrame {
     short value;
     ushort frame;
-    ushort easing;
-    ushort interpolation;
+    short ease_in;
+    short ease_out;
 };
 
 struct Transform {
