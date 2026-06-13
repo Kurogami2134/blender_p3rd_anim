@@ -34,13 +34,13 @@ def insert_keyframe(obj, transform: int, frame: int, value: int) -> None:
             obj.rotation_euler[2] = value * TransformValues[transform]
             obj.keyframe_insert(data_path="rotation_euler", index=2, frame=frame)
         case 0x0040: #  "X Trans"
-            obj.location[0] = value * TransformValues[transform]
+            obj.location[0] = value * TransformValues[transform] - obj.bone.head[0]
             obj.keyframe_insert(data_path="location", index=0, frame=frame)
         case 0x0080: #  "Y Trans"
-            obj.location[1] = value * TransformValues[transform]
+            obj.location[1] = value * TransformValues[transform] - obj.bone.head[1]
             obj.keyframe_insert(data_path="location", index=1, frame=frame)
         case 0x0100: #  "Z Trans"
-            obj.location[2] = value * TransformValues[transform]
+            obj.location[2] = value * TransformValues[transform] - obj.bone.head[2]
             obj.keyframe_insert(data_path="location", index=2, frame=frame)
         case 0x0200: #  "X Scale"
             obj.scale[0] = value * TransformValues[transform]
@@ -61,6 +61,15 @@ def do_bone_anim(file, bone, parent) -> None:
         [insert_keyframe(bone, transform_type, frame_idx, value) for value, frame_idx, _, _ in keyframes]
         
         kps = parent.animation_data.action.fcurves[-1].keyframe_points
+        match transform_type:
+                case 0x40:
+                    offset = -bone.bone.head[0]
+                case 0x80:
+                    offset = -bone.bone.head[1]
+                case 0x100:
+                    offset = -bone.bone.head[2]
+                case _:
+                    offset = 0
         for kf in range(len(keyframes)):
             kps[kf].interpolation = 'BEZIER'
             kps[kf].handle_left_type = 'FREE'
@@ -68,18 +77,18 @@ def do_bone_anim(file, bone, parent) -> None:
             if kf == 0:
                 prev_dt: float = 1
                 next_dt: float = (keyframes[kf+1][1] - keyframes[kf][1]) / 3.0
-                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0]) * TransformValues[transform_type])
-                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0] + keyframes[kf][3] * next_dt) * TransformValues[transform_type])
+                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0]) * TransformValues[transform_type] + offset)
+                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0] + keyframes[kf][3] * next_dt) * TransformValues[transform_type] + offset)
             elif kf == len(keyframes) - 1:
                 prev_dt: float = (keyframes[kf][1] - keyframes[kf - 1][1]) / 3.0
                 next_dt: float = 1
-                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0] - keyframes[kf][2] * prev_dt) * TransformValues[transform_type])
-                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0]) * TransformValues[transform_type])
+                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0] - keyframes[kf][2] * prev_dt) * TransformValues[transform_type] + offset)
+                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0]) * TransformValues[transform_type] + offset)
             else:
                 prev_dt: float = (keyframes[kf][1] - keyframes[kf - 1][1]) / 3.0
                 next_dt: float = (keyframes[kf+1][1] - keyframes[kf][1]) / 3.0
-                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0] - keyframes[kf][2] * prev_dt) * TransformValues[transform_type])
-                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0] + keyframes[kf][3] * next_dt) * TransformValues[transform_type])
+                kps[kf].handle_left=(keyframes[kf][1] - prev_dt, (keyframes[kf][0] - keyframes[kf][2] * prev_dt) * TransformValues[transform_type] + offset)
+                kps[kf].handle_right=(keyframes[kf][1] + next_dt, (keyframes[kf][0] + keyframes[kf][3] * next_dt) * TransformValues[transform_type] + offset)
                 
 
 def import_anim(file, armature, missing_bones = None, bone_offset: int = 2) -> None:
