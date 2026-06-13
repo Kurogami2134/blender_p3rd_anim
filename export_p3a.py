@@ -53,16 +53,20 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
         if transform_type not in TransformRemap:
                 warnings.append(f'Unsupported channel: {transform_type}.')
                 continue
+        if "location" in curve.data_path and armature.pose.bones[bone_idx].parent is not None:
+            offset = (armature.pose.bones[bone_idx].head - armature.pose.bones[bone_idx].parent.head)[curve.array_index]
+        else:
+            offset = 0
         bones[bone_idx].append({
             "transform": transform_type,
             "keyframes": [(
                 int(x.co[0]), 
-                get_value(x.co[1], curve.data_path.split(".")[-1]),
+                get_value(x.co[1] + offset, curve.data_path.split(".")[-1]),
                 
-                get_value(x.handle_right[1], curve.data_path.split(".")[-1]),
+                get_value(x.handle_right[1] + offset, curve.data_path.split(".")[-1]),
                 x.handle_right[0] - x.co[0],
                 
-                get_value(x.handle_left[1], curve.data_path.split(".")[-1]),
+                get_value(x.handle_left[1] + offset, curve.data_path.split(".")[-1]),
                 x.co[0] - x.handle_left[0],
                 ) for x in curve.keyframe_points],
         })
