@@ -21,6 +21,7 @@ def execute(c, filepath: str, bone_offset: int, missing: str) -> set[str]:
             file.seek(0)
             Header = unpack(f"{header_size//4}i", file.read(header_size))
             count = (Header[-1] - header_size - 4) // 4
+            warnings = set()
             for offset_idx in range(count):
                 file.seek(header_size + 4 + offset_idx * 4)
                 offset = unpack("i", file.read(4))[0]
@@ -28,13 +29,16 @@ def execute(c, filepath: str, bone_offset: int, missing: str) -> set[str]:
                     print(f'Importing Anim_{offset_idx:0>3}.')
                     file.seek(offset)
                     obj.animation_data.action = bpy.data.actions.new(f'Anim_{offset_idx:0>3}')
-                    import_anim(
+                    warnings.update(import_anim(
                         file, 
                         obj, 
                         bone_offset=bone_offset, 
                         missing_bones=missing_bones
-                    )
+                    ))
+            if warnings:
+                warning(list(warnings))
     except:
+        raise
         warning(["Import Error"])
         return {'CANCELLED'}
     return {'FINISHED'}
