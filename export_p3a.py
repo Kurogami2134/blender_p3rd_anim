@@ -1,9 +1,6 @@
 import bpy
-from math import radians
+from .shared import ROTATION_TRANS, SCALE_TRANS, LOCATION_TRANS
 from struct import pack
-
-
-ROTATION_SCALE = radians(1 / 0x1000 * 90)
 
 
 TransformRemap: dict[str, int] = {
@@ -35,14 +32,15 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
     def get_value(value: int, transform_type: str) -> int:
         match transform_type:
             case "location":
-                return int(value * 0x10)
+                return int(value / LOCATION_TRANS)
             case "scale":
-                return int(value * 0x100)
+                return int(value / SCALE_TRANS)
             case "rotation_euler":
-                return int(value / ROTATION_SCALE)
+                return int(value / ROTATION_TRANS)
             case _:
                 return 0
 
+    warnings: list[str] = []
     if missing_bones is None:
         missing_bones =  []
     
@@ -51,8 +49,12 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
         bone_idx = get_bone_idx(curve.data_path) - bone_offset
         if bone_idx not in bones:
             bones[bone_idx] = []
+        transform_type = f'{curve.data_path.split(".")[-1]}_{["x", "y", "z"][curve.array_index]}'
+        if transform_type not in TransformRemap:
+                warnings.append(f'Unsupported channel: {transform_type}.')
+                continue
         bones[bone_idx].append({
-            "transform": f'{curve.data_path.split(".")[-1]}_{["x", "y", "z"][curve.array_index]}',
+            "transform": transform_type,
             "keyframes": [(
                 int(x.co[0]), 
                 get_value(x.co[1], curve.data_path.split(".")[-1]),
@@ -97,6 +99,9 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
     size = file.tell()
     file.seek(0)
     file.write(pack("3if", (max(bones.keys()) + 1 - len(missing_bones)) if bone_count is None else bone_count, size, 1 if loop else 0, loop_start if loop else 0))
+
+    if warnings:
+        warning(warnings)
 
 
 def execute(c, filepath: str, offset: int, loop: bool, missing: str, bone_count: int, loop_start: int) -> set[str]:
