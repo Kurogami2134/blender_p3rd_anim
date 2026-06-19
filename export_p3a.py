@@ -47,6 +47,8 @@ def export_anim(file, armature, missing_bones = None, bone_offset: int = 2, loop
     bones = {}
     for curve in armature.animation_data.action.fcurves:
         bone_idx = get_bone_idx(curve.data_path) - bone_offset
+        if bone_idx < 0:
+            continue
         if bone_idx not in bones:
             bones[bone_idx] = []
         transform_type = f'{curve.data_path.split(".")[-1]}_{["x", "y", "z"][curve.array_index]}'
